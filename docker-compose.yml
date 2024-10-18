@@ -54,13 +54,22 @@ services:
       POSTGRES_DB: laravel
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
       - laravel_dotnet_network
 
+  dotnet_api-build:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: dotnet_api-build
+    working_dir: /src
+    volumes:
+      - ./dotnet-api:/src  # Mount your API source code
+    command: >
+      sh -c "dotnet restore Metheo.Api/Metheo.Api.csproj && \
+              dotnet publish Metheo.Api/Metheo.Api.csproj -c Release -o /app/publish /p:UseAppHost=false"
+
+
   dotnet_api:
-    image: mcr.microsoft.com/dotnet/aspnet:7.0-alpine
+    image: mcr.microsoft.com/dotnet/aspnet:8.0-alpine
     container_name: dotnet_api
     working_dir: /app
     volumes:
@@ -71,12 +80,11 @@ services:
       - "5000:80"
     depends_on:
       - db
+      - dotnet_api-build
     networks:
       - laravel_dotnet_network
       - node_dotnet_network
-    build:
-      context: ./dotnet-api
-      dockerfile: Dockerfile
+    command: ["dotnet", "/app/publish/Metheo.Api.dll"]
 
   node_service:
     image: node:alpine
@@ -156,12 +164,11 @@ services:
       - "5401:80"
     depends_on:
       - db
+      - dotnet_api-build
     networks:
       - laravel_dotnet_network_dev
       - node_dotnet_network_dev
-    build:
-      context: ./dotnet-api
-      dockerfile: Dockerfile
+    command: ["dotnet", "/app/publish/Metheo.Api.dll"]
 
   node_service_dev:
     image: node:alpine
