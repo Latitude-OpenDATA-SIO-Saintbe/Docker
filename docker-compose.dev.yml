@@ -1,0 +1,105 @@
+version: '3.8'
+
+networks:
+  laravel_dotnet_network_dev:
+    driver: bridge
+  node_dotnet_network_dev:
+    driver: bridge
+
+services:
+  laravel_app_dev:
+    image: php:8.2-fpm-alpine
+    container_name: laravel_app
+    working_dir: /var/www/html
+    volumes:
+      - ./dev/laravel:/var/www/html/laravel
+    environment:
+      WEB_DOCUMENT_ROOT: /var/www/html/public
+      APP_ENV: development
+      DB_CONNECTION: pgsql
+      DB_HOST: db_dev
+      DB_PORT: 5400
+      DB_DATABASE: laravel
+      DB_USERNAME: user
+      DB_PASSWORD: password
+    ports:
+      - "9400:8000"
+    depends_on:
+      - db_dev
+    networks:
+      - laravel_dotnet_network_dev
+    command: >
+      sh -c "apk add --no-cache git curl postgresql-dev && \
+              docker-php-ext-install pdo pdo_pgsql && \
+              apk add --no-cache nodejs npm && \
+              curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+              cd /var/www/html/laravel/ && \
+              composer install && \
+              npm install && npm run build && \
+              php artisan migrate && \
+              mv ./.env.example ./.env && \            
+              php artisan key:generate && \
+              php artisan serve --host=0.0.0.0 --port=8000"
+
+  db_dev:
+    image: postgres:alpine
+    container_name: postgres_db_dev
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: laravel
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    ports:
+      - "5400:5432"
+    networks:
+      - laravel_dotnet_network_dev
+
+  dotnet_api-build:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: dotnet_api-build
+    working_dir: /app
+    volumes:
+      - ./dotnet-api:/app
+    command: >
+      sh -c "dotnet restore Metheo.Api/Metheo.Api.csproj && \
+              dotnet publish Metheo.Api/Metheo.Api.csproj -c Release -o /app/publish /p:UseAppHost=false"
+
+  dotnet_api_dev:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+    container_name: dotnet_api_dev
+    working_dir: /app
+    volumes:
+      - ./dev/dotnet-api:/app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5401:80"
+    depends_on:
+      - db_dev
+      - dotnet_api-build
+    networks:
+      - laravel_dotnet_network_dev
+      - node_dotnet_network_dev
+    command: ["dotnet", "/app/publish/Metheo.Api.dll"]
+
+  node_service_dev:
+    image: node:alpine
+    container_name: node_service_dev
+    working_dir: /var/www/html
+    volumes:
+      - ./dev/nextjs:/var/www/html/nextjs
+    depends_on:
+      - dotnet_api_dev
+    ports:
+      - "3001:3000"
+    command: >
+      sh -c "apk add --no-cache git && \
+              cd /var/www/html/nextjs && \
+              npm install && npm run build && \
+              npm start"
+    networks:
+      - node_dotnet_network_dev
+
+volumes:
+  pgdata_dev:
