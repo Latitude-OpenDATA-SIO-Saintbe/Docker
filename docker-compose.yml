@@ -82,20 +82,17 @@ services:
     command: ["dotnet", "/app/publish/Metheo.Api.dll"]
 
   node_service:
-    image: node:alpine
-    container_name: node_service
-    working_dir: /var/www/html
+    build:
+      context: ./ 
+      dockerfile: Dockerfile
+    container_name: nextjs_app
+    working_dir: /app
     volumes:
-      - ./:/var/www/html
+      - ./nextjs:/app
     depends_on:
       - dotnet_api
     ports:
       - "3000:3000"
-    command: >
-      sh -c "apk add --no-cache git && \
-              cd /var/www/html/nextjs && \
-              npm install && npm run build && \
-              npm start"
     networks:
       - node_dotnet_network
 
