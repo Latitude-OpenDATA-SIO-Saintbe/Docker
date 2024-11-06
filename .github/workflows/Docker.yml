@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git curl
+        sudo apt-get install -y git curl fzf
 
     # Step 5: Make the `update_repos.sh` script executable and run it
     - name: Run clone_repos.sh to clone repositories
