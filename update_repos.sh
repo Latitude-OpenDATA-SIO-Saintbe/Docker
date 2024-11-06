@@ -22,6 +22,6 @@ fetch_repo() {
 }
 
 # Loop through each repository and fetch updates
-for repo in "$BASE_PATH"/laravel "$BASE_PATH"/nextjs "$BASE_PATH"/dotnet-api do
+for repo in "$BASE_PATH"/laravel "$BASE_PATH"/nextjs "$BASE_PATH"/dotnet-api; do
   fetch_repo "$repo"
 done
