@@ -1,13 +1,7 @@
-FROM node:20-alpine AS deps
+FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-
 COPY ./nextjs/package.json ./nextjs/package-lock.json ./
-RUN  npm install --production
-
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY ./nextjs .
 
 ENV NEXT_TELEMETRY_DISABLED 1
