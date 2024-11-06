@@ -38,8 +38,8 @@ jobs:
     # Step 5: Make the `update_repos.sh` script executable and run it
     - name: Run update_repos.sh to clone repositories
       run: |
-        chmod +x ./update_repos.sh
-        ./update_repos.sh "/home/runner/work/"
+        chmod +x ./clone_repos.sh
+        ./clone_repos.sh "/home/runner/work"
 
     - name: Run Docker Compose to validate
       run: |
