@@ -29,6 +29,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
 
+    # Step 4: Install dependencies (Git, Docker Compose, etc.)
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git curl
+
+    # Step 5: Make the `update_repos.sh` script executable and run it
+    - name: Run update_repos.sh to clone repositories
+      run: |
+        chmod +x ./update_repos.sh
+        ./update_repos.sh "/home/runner/work/"
+
     - name: Run Docker Compose to validate
       run: |
         docker-compose -f docker-compose.yml up -d
