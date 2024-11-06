@@ -36,7 +36,7 @@ jobs:
         sudo apt-get install -y git curl
 
     # Step 5: Make the `update_repos.sh` script executable and run it
-    - name: Run update_repos.sh to clone repositories
+    - name: Run clone_repos.sh to clone repositories
       run: |
         chmod +x ./clone_repos.sh
         ./clone_repos.sh "/home/runner/work"
