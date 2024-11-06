@@ -13,9 +13,6 @@ fi
 mkdir -p "$BASE_PATH/laravel" || { echo "Failed to create directory: $BASE_PATH/laravel"; exit 1; }
 mkdir -p "$BASE_PATH/nextjs" || { echo "Failed to create directory: $BASE_PATH/nextjs"; exit 1; }
 mkdir -p "$BASE_PATH/dotnet-api" || { echo "Failed to create directory: $BASE_PATH/dotnet-api"; exit 1; }
-mkdir -p "$BASE_PATH/dev/laravel" || { echo "Failed to create directory: $BASE_PATH/dev/laravel"; exit 1; }
-mkdir -p "$BASE_PATH/dev/nextjs" || { echo "Failed to create directory: $BASE_PATH/dev/nextjs"; exit 1; }
-mkdir -p "$BASE_PATH/dev/dotnet-api" || { echo "Failed to create directory: $BASE_PATH/dev/dotnet-api"; exit 1; }
 
 # Function to clone repositories and handle errors
 clone_repo() {
@@ -41,11 +38,6 @@ fi
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/Laravel.git" "$BASE_PATH/laravel" "main"
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/WebsiteNextJS.git" "$BASE_PATH/nextjs" "main"
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/DotnetApi.git" "$BASE_PATH/dotnet-api" "main"
-
-# Clone the repositories into the dev folder from the dev branch
-clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/Laravel.git" "$BASE_PATH/dev/laravel" "dev"
-clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/WebsiteNextJS.git" "$BASE_PATH/dev/nextjs" "dev"
-clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/DotnetApi.git" "$BASE_PATH/dev/dotnet-api" "dev"
 
 echo "Repositories cloned successfully."
 
