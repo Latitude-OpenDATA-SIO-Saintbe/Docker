@@ -2,7 +2,7 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY ./nextjs/package.json ./nextjs/package-lock.json ./
 RUN  npm install --production
 
 FROM node:20-alpine AS builder
