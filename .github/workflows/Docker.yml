@@ -1,0 +1,59 @@
+name: Docker Compose PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-docker-
+
+    - name: Set up Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
+    # Step 4: Install dependencies (Git, Docker Compose, etc.)
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git curl fzf
+
+    # Step 5: Make the `update_repos.sh` script executable and run it
+    - name: Run clone_repos.sh to clone repositories
+      run: |
+        chmod +x ./clone_repos.sh
+        ./clone_repos.sh "."
+
+    - name: Run Docker Compose to validate
+      run: |
+        docker-compose -f docker-compose.yml up -d
+        docker-compose -f docker-compose.yml ps
+
+    - name: Stop Docker containers
+      if: always()
+      run: |
+        docker-compose -f docker-compose.yml down
+    - name: Comment on PR if successful
+      if: success()
+      run: |
+        curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+             -X POST \
+             -d '{"body": "Docker Compose services have started successfully! 🚀"}' \
+             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
