@@ -1,0 +1,34 @@
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Install Tailscale in a Docker container (if needed)
+      - name: Set up Tailscale in Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl enable --now docker
+
+          # Pull the Tailscale Docker image and start it
+          docker run --privileged --rm --name tailscale \
+            -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
+            -e TS_HOSTNAME=github-actions \
+            tailscale/tailscale:latest
+
+          # Wait for Tailscale to connect
+          docker exec -it tailscale tailscale up
+
+      # Step 3: Deploy to Home Server
+      - name: Deploy to Home Server via Tailscale
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} << 'EOF'
+            # Pull and deploy application code
+            cd /path/to/app
+            git pull origin main
+            docker-compose up -d --build
+          EOF
