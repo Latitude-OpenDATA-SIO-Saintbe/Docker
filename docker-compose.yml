@@ -86,7 +86,6 @@ services:
       context: ./nextjs 
       dockerfile: Dockerfile
     container_name: nextjs_app
-    container_name: node_service
     working_dir: /app
     volumes:
       - ./:/app
