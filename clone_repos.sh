@@ -53,7 +53,7 @@ UPDATE_SCRIPT=$(find "$BASE_PATH" -name "update_repos.sh" | fzf --select-1 --exi
 # Ensure the update script exists before running it
 if [ -n "$UPDATE_SCRIPT" ] && [ -f "$UPDATE_SCRIPT" ]; then
   echo "Running update script: $UPDATE_SCRIPT"
-  bash "$UPDATE_SCRIPT"
+  bash "$UPDATE_SCRIPT" "$BASE_PATH"
 else
   echo "No valid update_repos.sh script found."
   exit 1
