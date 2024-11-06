@@ -37,6 +37,6 @@ jobs:
             # Pull and deploy application code
             cd /path/to/app
             git pull origin main
-            bash update_repos.sh 
-            docker-compose up -d --build
+            ./update_repos.sh ./
+            docker-compose up -d
           EOF
