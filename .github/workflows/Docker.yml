@@ -39,7 +39,7 @@ jobs:
     - name: Run clone_repos.sh to clone repositories
       run: |
         chmod +x ./clone_repos.sh
-        ./clone_repos.sh "/home/runner/work"
+        ./clone_repos.sh "/home/runner/work/Docker"
 
     - name: Run Docker Compose to validate
       run: |
