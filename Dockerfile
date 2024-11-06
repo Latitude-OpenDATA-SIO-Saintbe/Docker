@@ -12,6 +12,7 @@ COPY ./nextjs .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN  npm install --production
 RUN npm run build
 
 FROM node:20-alpine AS runner
