@@ -49,7 +49,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: laravel
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./db:/var/lib/postgresql/data
     networks:
       - laravel_dotnet_network
 
@@ -95,6 +95,3 @@ services:
       - "3000:3000"
     networks:
       - node_dotnet_network
-
-volumes:
-  pgdata:

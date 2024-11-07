@@ -13,28 +13,52 @@ jobs:
       # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
-
+        
+      # Step 2: Set up Docker
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Step 2: Install Tailscale in a Docker container (if needed)
+      # Step 3: Set up Tailscale in Docker
       - name: Set up Tailscale in Docker
         run: |
-          # Pull the Tailscale Docker image and start it
+          # Pull the Tailscale Docker image (with caching if possible)
+          docker pull tailscale/tailscale:latest
+
+          # Run Tailscale with the necessary environment variables
           docker run --privileged --rm --name tailscale \
             -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
             -e TS_HOSTNAME=github-actions \
-            tailscale/tailscale:latest
+            tailscale/tailscale:latest up
 
-          # Wait for Tailscale to connect
-          docker exec -it tailscale tailscale up
+          # Wait for Tailscale to establish the connection
+          for i in {1..10}; do
+            if docker exec tailscale tailscale status; then
+              echo "Tailscale is connected"
+              break
+            fi
+            echo "Waiting for Tailscale to connect..."
+            sleep 5
+          done
+          # Fail if Tailscale isn't connected after 10 attempts
+          if [ $i -eq 10 ]; then
+            echo "Tailscale failed to connect"
+            exit 1
+          fi
 
-      # Step 3: Deploy to Home Server
+      # Step 4: Deploy to Home Server via Tailscale
       - name: Deploy to Home Server via Tailscale
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
         run: |
+          # Set up the SSH private key for authentication
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          # SSH into the home server and deploy
           ssh -o StrictHostKeyChecking=no ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} << 'EOF'
             # Pull and deploy application code
-            cd /path/to/app
+            cd /data/compose/3
             git pull origin main
             ./update_repos.sh ./
             docker-compose up -d
