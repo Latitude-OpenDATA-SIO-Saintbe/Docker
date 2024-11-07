@@ -13,7 +13,7 @@ jobs:
       # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       # Step 2: Set up Docker
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
@@ -21,14 +21,14 @@ jobs:
       # Step 3: Set up Tailscale in Docker
       - name: Set up Tailscale in Docker
         run: |
-          # Pull the Tailscale Docker image (with caching if possible)
+          # Pull the Tailscale Docker image
           docker pull tailscale/tailscale:latest
 
-          # Run Tailscale with the necessary environment variables
+          # Run Tailscale with the necessary environment variables and set the entrypoint
           docker run --privileged --rm --name tailscale \
             -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
             -e TS_HOSTNAME=github-actions \
-            tailscale/tailscale:latest up
+            tailscale/tailscale:latest tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-actions
 
           # Wait for Tailscale to establish the connection
           for i in {1..10}; do
