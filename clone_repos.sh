@@ -13,6 +13,8 @@ fi
 mkdir -p "$BASE_PATH/laravel" || { echo "Failed to create directory: $BASE_PATH/laravel"; exit 1; }
 mkdir -p "$BASE_PATH/nextjs" || { echo "Failed to create directory: $BASE_PATH/nextjs"; exit 1; }
 mkdir -p "$BASE_PATH/dotnet-api" || { echo "Failed to create directory: $BASE_PATH/dotnet-api"; exit 1; }
+mkdir -p "$BASE_PATH/db-seed" || { echo "Failed to create directory: $BASE_PATH/db-seed"; exit 1; }
+mkdir -p "$BASE_PATH/db" || { echo "Failed to create directory: $BASE_PATH/db"; exit 1; }
 
 # Function to clone repositories and handle errors
 clone_repo() {
@@ -44,6 +46,7 @@ fi
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/Laravel.git" "$BASE_PATH/laravel" "main"
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/WebsiteNextJS.git" "$BASE_PATH/nextjs" "main"
 clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/DotnetApi.git" "$BASE_PATH/dotnet-api" "main"
+clone_repo "https://github.com/Latitude-OpenDATA-SIO-Saintbe/PythonPopPostgres.git" "$BASE_PATH/db-seed" "main"
 
 echo "Repositories cloned successfully."
 
@@ -66,5 +69,7 @@ if ! crontab -l | grep -q "$UPDATE_SCRIPT"; then
 else
   echo "Cron job already exists."
 fi
+echo "db-seed script"
+bash ./db-seed/setup-py.py
 
 echo "Script completed successfully."
