@@ -25,10 +25,11 @@ jobs:
           docker pull tailscale/tailscale:latest
 
           # Run Tailscale with the necessary environment variables and set the entrypoint
-          docker run --privileged --rm --name tailscale \
+          docker run --privileged --detach --name tailscale \
             -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
             -e TS_HOSTNAME=github-actions \
-            tailscale/tailscale:latest tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-actions
+            tailscale/tailscale:latest up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-actions
+
 
           # Wait for Tailscale to establish the connection
           for i in {1..10}; do
