@@ -45,9 +45,6 @@ jobs:
             exit 1
           fi
 
-          # Ensure Tailscale is up and running
-          docker exec tailscale tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-actions
-
       # Step 4: Deploy to Home Server via Tailscale
       - name: Deploy to Home Server via Tailscale
         env:
