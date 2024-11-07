@@ -56,10 +56,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
           # SSH into the home server and deploy
-          ssh -o StrictHostKeyChecking=no ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} << 'EOF'
             # Pull and deploy application code
             cd /data/compose/3
             git pull origin main
             ./update_repos.sh ./
             docker-compose up -d
           EOF
+
