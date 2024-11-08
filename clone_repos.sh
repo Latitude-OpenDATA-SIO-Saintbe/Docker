@@ -70,6 +70,6 @@ else
   echo "Cron job already exists."
 fi
 echo "db-seed script"
-bash ./db-seed/setup-py.py
+bash ./db-seed/setup-py.py ./db-seed
 
 echo "Script completed successfully."
