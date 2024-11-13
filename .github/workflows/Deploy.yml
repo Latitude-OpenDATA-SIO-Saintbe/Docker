@@ -46,22 +46,17 @@ jobs:
           fi
 
       # Step 4: Deploy to Home Server via Tailscale
-      - name: Deploy to Home Server via Tailscale
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
-        run: |
-          # Set up the SSH private key for authentication
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          # SSH into the home server and deploy
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=no ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} << 'EOF'
+      - name: 🌈 Deploy with ssh...
+        uses: sebastianjnuwu/ssh-action-deploy@v4
+        with:
+          IP: ${{ secrets.HOME_TAILSCALE_IP }}
+          USER: ${{ secrets.HOME_SERVER_USER }}
+          KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
+          FOLDER: "/root/.deploy"
+          RUN: "ls -a; pwd"
+          
             # Commands to run on remote server
-            cd /data/compose/3
-            git pull origin main
-            ./update_repos.sh ./
-            docker-compose up -d
-          EOF
-
-
+            #cd /data/compose/3
+            #git pull origin main
+            #./update_repos.sh ./
+            #docker-compose up -d
