@@ -30,12 +30,6 @@ jobs:
             -e TS_HOSTNAME=github-actions \
             tailscale/tailscale:latest
 
-          # Run the Tailscale container in detached mode
-          docker run --privileged --detach --name tailscale \
-            -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
-            -e TS_HOSTNAME=github-actions \
-            tailscale/tailscale:latest
-
           # Wait for Tailscale to establish the connection (check status)
           for i in {1..10}; do
             if docker exec tailscale tailscale status; then
