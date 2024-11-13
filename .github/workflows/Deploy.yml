@@ -19,34 +19,11 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       # Step 3: Set up Tailscale in Docker
-      - name: Set up Tailscale in Docker
+      - name: Install Tailscale
         run: |
-          # Pull the Tailscale Docker image
-          docker pull tailscale/tailscale:latest
-
-          # Run the Tailscale container in detached mode with host networking
-          docker run --network host --privileged --detach --name tailscale \
-            -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
-            -e TS_HOSTNAME=github-actions \
-            tailscale/tailscale:latest
-
-          # Wait for Tailscale to establish the connection (check status)
-          for i in {1..10}; do
-            if docker exec tailscale tailscale status; then
-              echo "Tailscale is connected"
-              break
-            fi
-            echo "Waiting for Tailscale to connect..."
-            sleep 5
-          done
-          # Fail if Tailscale isn't connected after 10 attempts
-          if [ $i -eq 10 ]; then
-            echo "Tailscale failed to connect"
-            exit 1
-          fi
-
-          # Display IP addresses for verification
-          docker exec tailscale tailscale status
+          curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscale up --authkey="${{ secrets.TAILSCALE_AUTHKEY }}" --hostname="github-actions-runner"
+          tailscale status
           ip a
 
       # Step 4: Deploy to Home Server via SSH with Tailscale IP
