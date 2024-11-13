@@ -45,6 +45,8 @@ jobs:
             exit 1
           fi
 
+          ip a
+
       # Step 4: Deploy to Home Server via Tailscale
       - name: 🌈 Deploy with SSH
         uses: sebastianjnuwu/ssh-action-deploy@v4
