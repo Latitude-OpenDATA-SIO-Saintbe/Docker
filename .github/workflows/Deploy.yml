@@ -26,7 +26,23 @@ jobs:
           tailscale status
           ip a
 
-      # Step 4: Deploy to Home Server via SSH with Tailscale IP
+      # Step 4: Set up SSH key for SSH authentication
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOME_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOME_SERVER_TAILSCALE_IP }} >> ~/.ssh/known_hosts
+
+      # Step 5: Deploy to Home Server via SSH with Tailscale IP
       - name: 🌈 Deploy with SSH
         run: |
-          sshpass -p ${{ secrets.SSH_KEY }} ssh ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} 'cd /data/compose/3 && git pull origin main && ./update_repos.sh ./ && docker-compose up -d && ls -a && pwd'
+          echo "Starting deployment..."
+          ssh ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_SERVER_TAILSCALE_IP }} << 'EOF'
+            cd /data/compose/3
+            git pull origin main
+            ./update_repos.sh ./
+            docker-compose up -d
+            ls -a
+            pwd
+          EOF
