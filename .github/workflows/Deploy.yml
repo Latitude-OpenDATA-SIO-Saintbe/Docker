@@ -32,8 +32,8 @@ jobs:
         with:
           IP: ${{ secrets.HOME_TAILSCALE_IP }}
           USER: ${{ secrets.HOME_SERVER_USER }}
-          KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
-          FOLDER: "/"
+          KEY: ${{ secrets.SSH_KEY }}
+          FOLDER: "/root/.deploy"
           RUN: |
             echo "Starting deployment..."
             # Your custom deploy commands go here
