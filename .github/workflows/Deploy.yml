@@ -32,7 +32,9 @@ jobs:
 
           # Wait for Tailscale to establish the connection (check status)
           for i in {1..10}; do
-            if docker exec tailscale tailscale status; then
+            STATUS=$(docker exec tailscale tailscale status)
+            echo "$STATUS"
+            if [[ "$STATUS" == *"Connected"* ]]; then
               echo "Tailscale is connected"
               break
             fi
@@ -46,17 +48,19 @@ jobs:
           fi
 
       # Step 4: Deploy to Home Server via Tailscale
-      - name: 🌈 Deploy with ssh...
+      - name: 🌈 Deploy with SSH
         uses: sebastianjnuwu/ssh-action-deploy@v4
         with:
           IP: ${{ secrets.HOME_TAILSCALE_IP }}
           USER: ${{ secrets.HOME_SERVER_USER }}
           KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
-          FOLDER: "/root/.deploy"
-          RUN: "ls -a; pwd"
-          
-            # Commands to run on remote server
-            #cd /data/compose/3
-            #git pull origin main
-            #./update_repos.sh ./
-            #docker-compose up -d
+          FOLDER: "/"
+          RUN: |
+            echo "Starting deployment..."
+            # Uncomment and add your custom deploy commands here
+            # cd /data/compose/3
+            # git pull origin main
+            # ./update_repos.sh ./
+            # docker-compose up -d
+            ls -a
+            pwd
