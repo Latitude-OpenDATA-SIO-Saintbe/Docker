@@ -28,19 +28,5 @@ jobs:
 
       # Step 4: Deploy to Home Server via SSH with Tailscale IP
       - name: 🌈 Deploy with SSH
-        uses: sebastianjnuwu/ssh-action-deploy@v4
-        with:
-          IP: ${{ secrets.HOME_TAILSCALE_IP }}
-          USER: ${{ secrets.HOME_SERVER_USER }}
-          KEY: ${{ secrets.SSH_KEY }}
-          FOLDER: "/root/.deploy"
-          RUN: |
-            echo "Starting deployment..."
-            # Your custom deploy commands go here
-            # For example:
-            # cd /data/compose/3
-            # git pull origin main
-            # ./update_repos.sh ./
-            # docker-compose up -d
-            ls -a
-            pwd
+        run: |
+          sshpass -p ${{ secrets.SSH_KEY }} ssh ${{ secrets.HOME_SERVER_USER }}@${{ secrets.HOME_TAILSCALE_IP }} 'cd /data/compose/3 && git pull origin main && ./update_repos.sh ./ && docker-compose up -d && ls -a && pwd'
