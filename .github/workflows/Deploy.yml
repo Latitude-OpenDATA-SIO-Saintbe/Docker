@@ -24,30 +24,34 @@ jobs:
           # Pull the Tailscale Docker image
           docker pull tailscale/tailscale:latest
 
-          # Run the Tailscale container in detached mode
-          docker run --privileged --detach --name tailscale \
+          # Run the Tailscale container in detached mode with host networking
+          docker run --network host --privileged --detach --name tailscale \
             -e TS_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
             -e TS_HOSTNAME=github-actions \
             tailscale/tailscale:latest
 
-          # Wait for Tailscale to establish the connection (check status)
+          # Wait for Tailscale to establish the connection (check IP status)
           for i in {1..10}; do
-            if docker exec tailscale tailscale status; then
-              echo "Tailscale is connected"
+            TAILSCALE_IP=$(docker exec tailscale tailscale ip)
+            if [ -n "$TAILSCALE_IP" ]; then
+              echo "Tailscale is connected with IP $TAILSCALE_IP"
               break
             fi
             echo "Waiting for Tailscale to connect..."
             sleep 5
           done
+
           # Fail if Tailscale isn't connected after 10 attempts
           if [ $i -eq 10 ]; then
             echo "Tailscale failed to connect"
             exit 1
           fi
 
+          # Display IP addresses for verification
+          docker exec tailscale tailscale status
           ip a
 
-      # Step 4: Deploy to Home Server via Tailscale
+      # Step 4: Deploy to Home Server via SSH with Tailscale IP
       - name: 🌈 Deploy with SSH
         uses: sebastianjnuwu/ssh-action-deploy@v4
         with:
@@ -57,7 +61,8 @@ jobs:
           FOLDER: "/"
           RUN: |
             echo "Starting deployment..."
-            # Uncomment and add your custom deploy commands here
+            # Your custom deploy commands go here
+            # For example:
             # cd /data/compose/3
             # git pull origin main
             # ./update_repos.sh ./
