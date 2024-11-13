@@ -32,6 +32,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.HOME_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          # Ensure the correct Tailscale IP is passed to ssh-keyscan
           ssh-keyscan -H ${{ secrets.HOME_SERVER_TAILSCALE_IP }} >> ~/.ssh/known_hosts
 
       # Step 5: Deploy to Home Server via SSH with Tailscale IP
