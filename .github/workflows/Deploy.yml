@@ -25,7 +25,6 @@ jobs:
           sudo tailscale up --authkey="${{ secrets.TAILSCALE_AUTHKEY }}" --hostname="github-actions-runner"
           tailscale status
           ip a
-
       # Step 4: Deploy to Home Server via SSH with Tailscale IP
       - name: 🌈 Deploy with SSH
         uses: sebastianjnuwu/ssh-action-deploy@v4
@@ -36,11 +35,26 @@ jobs:
           FOLDER: "/"
           RUN: |
             echo "Starting deployment..."
-            # Your custom deploy commands go here
-            # For example:
-            # cd /data/compose/3
-            # git pull origin main
-            # ./update_repos.sh ./
-            # docker-compose up -d
+            
+            # Navigate to the target folder
+            cd /data/compose/3
+            
+            # Check if the Git repository already exists, if not, clone it
+            if [ ! -d ".git" ]; then
+              echo "Git repository not found. Cloning repository..."
+              git clone https://github.com/Latitude-OpenDATA-SIO-Saintbe/Docker/
+            else
+              echo "Git repository found. Pulling the latest changes..."
+              git pull origin main
+            fi
+      
+            # Run your update script
+            ./update_repos.sh ./
+            
+            # Restart your containers using docker-compose
+            docker-compose up -d
+            
+            # List directory contents and print working directory for debugging
             ls -a
             pwd
+
