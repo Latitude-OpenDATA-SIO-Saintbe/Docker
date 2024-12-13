@@ -24,33 +24,31 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
-name: Deploy to Amazon ECS
+name: Deploy to ECS with Custom Deployment Logic
 
 on:
   push:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: MY_ECR_REPOSITORY           # set this to your Amazon ECR repository name
-  ECS_SERVICE: MY_ECS_SERVICE                 # set this to your Amazon ECS service name
-  ECS_CLUSTER: MY_ECS_CLUSTER                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
-                                               # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: MY_CONTAINER_NAME           # set this to the name of the container in the
-                                               # containerDefinitions section of your task definition
+  AWS_REGION: MY_AWS_REGION                   # Set this to your AWS region, e.g., us-west-1
+  ECR_REPOSITORY: MY_ECR_REPOSITORY           # Set this to your Amazon ECR repository name
+  ECS_SERVICE: MY_ECS_SERVICE                 # Set this to your ECS service name
+  ECS_CLUSTER: MY_ECS_CLUSTER                 # Set this to your ECS cluster name
+  ECS_TASK_DEFINITION: MY_ECS_TASK_DEFINITION # Set this to your ECS task definition path
+  CONTAINER_NAME: MY_CONTAINER_NAME           # Set this to the container name from the ECS task definition
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to ECS using myaws
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Configure AWS credentials
@@ -60,35 +58,30 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+    - name: Build and deploy with myaws
+      uses: my-org/myaws-action@v1   # Replace with the actual GitHub repo or path for your `myaws` action
       with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION }}
+        ecr-repository: ${{ env.ECR_REPOSITORY }}
+        ecs-service: ${{ env.ECS_SERVICE }}
+        ecs-cluster: ${{ env.ECS_CLUSTER }}
+        ecs-task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
-
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
+        image-tag: ${{ github.sha }}  # Image tag based on the commit SHA
         wait-for-service-stability: true
+
+    - name: Custom Deployment Logic (Git Clone, Update Repos, Docker Compose)
+      run: |
+        # Check if the Git repository already exists, if not, clone it
+        if [ ! -d ".git" ]; then
+          echo "Git repository not found. Cloning repository..."
+          git clone https://github.com/Latitude-OpenDATA-SIO-Saintbe/Docker/
+        else
+          echo "Git repository found. Pulling the latest changes..."
+          git pull origin main
+        fi
+
+        # Run your update script
+        ./update_repos.sh ./
+
+        # Restart your containers using docker-compose
+        docker-compose up -d
