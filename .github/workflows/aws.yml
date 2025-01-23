@@ -1,53 +1,47 @@
-name: Deploy to AWS
+name: Deploy to Amazon ECS
 
 on:
   push:
     branches:
-      - main  # Trigger on pushes to main branch
-  pull_request:
-    branches:
-      - main  # Optionally trigger on PRs to main branch
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECS_SERVICE: my_ecs_service
+  ECS_CLUSTER: latitude
+  ECS_TASK_DEFINITION: .aws/task-definition.json
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Step 2: Set up AWS credentials
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCOUNT_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Specify your AWS region
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-      # Step 3: Set up Docker
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      # Step 4: Build and push Docker images to ECR
-      - name: Log in to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+    - name: Build and push Docker Compose services to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker-compose -f docker-compose.yml build
+        docker-compose -f docker-compose.yml push
 
-      - name: Build Docker images
-        run: |
-          docker-compose -f docker-compose.yml build
-
-      - name: Tag Docker images
-        run: |
-          docker tag climate-change-sio:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/latitude-opendata-sio-saintbe/docker:latest
-
-      - name: Push Docker images to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/latitude-opendata-sio-saintbe/docker:latest
-
-      # Step 5: Deploy Docker Compose to ECS (use ECS CLI or AWS CLI)
-      - name: Deploy to AWS ECS
-        run: |
-          ecs-cli configure --region ${{ secrets.AWS_REGION }} --access-key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --cluster latitude
-          ecs-cli compose --file docker-compose.yml up
+    - name: Deploy to Amazon ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
