@@ -1,4 +1,4 @@
-name: Deploy to Home Infrastructure via Tailscale
+name: Deploy to Infrastructure
 
 on:
   push:
@@ -18,26 +18,16 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Step 3: Set up Tailscale in Docker
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey="${{ secrets.TAILSCALE_AUTHKEY }}" --hostname="github-actions-runner"
-          tailscale status
-          ip a
-      # Step 4: Deploy to Home Server via SSH with Tailscale IP
+      # Step 3: Deploy to Server
       - name: 🌈 Deploy with SSH
         uses: sebastianjnuwu/ssh-action-deploy@v4
         with:
-          IP: ${{ secrets.HOME_TAILSCALE_IP }}
-          USER: ${{ secrets.HOME_SERVER_USER }}
-          KEY: ${{ secrets.HOME_SERVER_SSH_KEY }}
+          IP: ${{ secrets.SERVER_IP }}
+          USER: ${{ secrets.SERVER_USER }}
+          KEY: ${{ secrets.SERVER_SSH_KEY }}
           FOLDER: "/"
           RUN: |
             echo "Starting deployment..."
-            
-            # Navigate to the target folder
-            cd /data/compose/3
             
             # Check if the Git repository already exists, if not, clone it
             if [ ! -d ".git" ]; then
@@ -46,15 +36,11 @@ jobs:
             else
               echo "Git repository found. Pulling the latest changes..."
               git pull origin main
+              ./clone_repos.sh .
             fi
-      
+            
             # Run your update script
-            ./update_repos.sh ./
+            ./update_repos.sh .
             
             # Restart your containers using docker-compose
             docker-compose up -d
-            
-            # List directory contents and print working directory for debugging
-            ls -a
-            pwd
-
