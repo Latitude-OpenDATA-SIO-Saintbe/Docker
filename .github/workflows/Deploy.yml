@@ -33,10 +33,12 @@ jobs:
             if [ ! -d ".git" ]; then
               echo "Git repository not found. Cloning repository..."
               git clone https://github.com/Latitude-OpenDATA-SIO-Saintbe/Docker/
+              cd Docker
+              ./clone_repos.sh .
             else
               echo "Git repository found. Pulling the latest changes..."
+              cd Docker
               git pull origin main
-              ./clone_repos.sh .
             fi
             
             # Run your update script
