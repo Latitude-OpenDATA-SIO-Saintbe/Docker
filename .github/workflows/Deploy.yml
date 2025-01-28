@@ -20,13 +20,13 @@ jobs:
 
       # Step 3: Deploy to Server
       - name: 🌈 Deploy with SSH
-        uses: sebastianjnuwu/ssh-action-deploy@v4
+        uses: appleboy/ssh-action@v0.1.0
         with:
-          IP: ${{ secrets.SERVER_IP }}
-          USER: ${{ secrets.SERVER_USER }}
-          KEY: ${{ secrets.SERVER_SSH_KEY }}
-          FOLDER: "/"
-          RUN: |
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
             echo "Starting deployment..."
             
             # Check if the Git repository already exists, if not, clone it
